@@ -16,7 +16,8 @@ var (
 )
 
 type MyData struct {
-	UserID string `json:"user_id"`
+	// UserID string `json:"user_id"`
+	Username string `json:"username"`
 }
 
 type MyClaims struct {
@@ -54,7 +55,7 @@ func GenerateToken(data MyData) (string, error) {
 		MyData: data,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "finalai",
-			Subject:   data.UserID,
+			Subject:   data.Username,
 			ExpiresAt: jwt.NewNumericDate(expAt),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),

@@ -1,0 +1,104 @@
+import React, { useState } from "react";
+import { Slider } from "@/components/ui/slider";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+// Simple 2D "shape" generator using PCA-like modes
+function generateShape(mean, modes, weights) {
+  let result = [...mean];
+  for (let i = 0; i < modes.length; i++) {
+    for (let j = 0; j < result.length; j++) {
+      result[j] += weights[i] * modes[i][j];
+    }
+  }
+  return result;
+}
+
+function ShapeCanvas({ data }) {
+  return (
+    <svg width={200} height={200} className="border rounded-2xl bg-white">
+      <polyline
+        fill="none"
+        stroke="black"
+        strokeWidth="2"
+        points={data
+          .map((v, i) => `${i * 10},${100 - v * 20}`)
+          .join(" ")}
+      />
+    </svg>
+  );
+}
+
+export default function App() {
+  // mean shape (toy example)
+  const mean = [0, 1, 2, 3, 2, 1, 0];
+
+  // PCA modes (toy)
+  const modes = [
+    [0, 0.5, 1, 1.5, 1, 0.5, 0], // size variation
+    [0, -0.5, -1, -1.5, -1, -0.5, 0], // inverse shape
+  ];
+
+  const [weights, setWeights] = useState([0, 0]);
+
+  const shape = generateShape(mean, modes, weights);
+
+  return (
+    <div className="p-6 grid gap-6">
+      <h1 className="text-2xl font-bold">Shape-VAE Visualization</h1>
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="font-semibold mb-2">Step 1: Mean Shape</h2>
+          <ShapeCanvas data={mean} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="font-semibold mb-2">Step 2: Adjust Latent Variables (s)</h2>
+          {weights.map((w, i) => (
+            <div key={i} className="mb-4">
+              <p>Mode {i + 1}</p>
+              <Slider
+                defaultValue={[0]}
+                min={-3}
+                max={3}
+                step={0.1}
+                onValueChange={(val) => {
+                  const newWeights = [...weights];
+                  newWeights[i] = val[0];
+                  setWeights(newWeights);
+                }}
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="font-semibold mb-2">Step 3: Generated Shape (Decoder Output)</h2>
+          <ShapeCanvas data={shape} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="font-semibold mb-2">Explanation</h2>
+          <p>
+            This demo simulates the Shape-VAE process:
+          </p>
+          <ul className="list-disc ml-6 mt-2">
+            <li>Mean shape = average anatomical structure</li>
+            <li>Modes = principal shape variations (PCA)</li>
+            <li>Sliders = latent variables (s)</li>
+            <li>Output = reconstructed shape via decoder</li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      <Button onClick={() => setWeights([0, 0])}>Reset</Button>
+    </div>
+  );
+}
