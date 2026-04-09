@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"finalai/internal/handler"
+	jwtauth "finalai/internal/middleware/jwt"
 	"log/slog"
 	"net/http"
 
@@ -60,7 +61,9 @@ func registerUserRoutes(g *echo.Group) {
 }
 
 func registerChatRoutes(g *echo.Group) {
+	g.Use(jwtauth.JWTAuth())
 }
 
 func registerImageRoutes(g *echo.Group) {
+	g.Use(jwtauth.JWTAuth())
 }
