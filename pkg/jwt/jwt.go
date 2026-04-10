@@ -15,6 +15,8 @@ var (
 	exp       time.Duration
 )
 
+const issuer = "finalai"
+
 type MyData struct {
 	// UserID string `json:"user_id"`
 	Username string `json:"username"`
@@ -54,7 +56,7 @@ func GenerateToken(data MyData) (string, error) {
 	claims := MyClaims{
 		MyData: data,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "finalai",
+			Issuer:    issuer,
 			Subject:   data.Username,
 			ExpiresAt: jwt.NewNumericDate(expAt),
 			IssuedAt:  jwt.NewNumericDate(now),

@@ -58,6 +58,9 @@ func registerUserRoutes(g *echo.Group) {
 	userHandler := handler.NewUserHandler()
 	g.POST("/register", userHandler.Register)
 	g.POST("/login", userHandler.Login)
+
+	g.Use(jwtauth.JWTAuth())
+	g.GET("/profile", userHandler.GetProfile)
 }
 
 func registerChatRoutes(g *echo.Group) {

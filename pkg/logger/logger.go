@@ -20,32 +20,3 @@ func NewLogger() *slog.Logger {
 
 	return slog.New(slog.NewJSONHandler(os.Stdout, opts))
 }
-
-// func NewLogger(lv string) *slog.Logger {
-// 	level := parseLevel(lv)
-
-// 	consoleHandler := tint.NewHandler(os.Stdout, &tint.Options{
-// 		AddSource:  true,
-// 		Level:      level,
-// 		TimeFormat: time.RFC3339,
-// 	})
-
-// 	logger := slog.New(consoleHandler)
-
-// 	return logger
-// }
-
-// func parseLevel(level string) slog.Level {
-// 	switch strings.ToLower(level) {
-// 	case "debug":
-// 		return slog.LevelDebug
-// 	case "info":
-// 		return slog.LevelInfo
-// 	case "warn", "warning":
-// 		return slog.LevelWarn
-// 	case "error":
-// 		return slog.LevelError
-// 	default:
-// 		return slog.LevelInfo
-// 	}
-// }

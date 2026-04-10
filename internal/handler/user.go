@@ -2,9 +2,10 @@ package handler
 
 import (
 	"context"
+	"finalai/internal/apperror"
 	"finalai/internal/dto"
+	"finalai/internal/response"
 	"finalai/internal/service"
-	"net/http"
 	"strings"
 	"time"
 
@@ -26,33 +27,16 @@ func (h *UserHandler) Register(c *echo.Context) error {
 	defer cancel()
 
 	req := new(dto.UserRegisterReq)
-	if err := c.Bind(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]any{
-			"code": -1,
-			"msg":  "Invalid request body: " + err.Error(),
-		})
-	}
-
-	if err := c.Validate(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]any{
-			"code": -1,
-			"msg":  "Validation failed: " + err.Error(),
-		})
+	if err := h.bindAndValidate(c, req); err != nil {
+		return err
 	}
 
 	res, err := h.userSVC.Register(ctx, req)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{
-			"code": -1,
-			"msg":  "Failed to register user: " + err.Error(),
-		})
+		return response.ErrorFrom(c, err)
 	}
 
-	return c.JSON(http.StatusOK, map[string]any{
-		"code": 0,
-		"msg":  "用户注册成功",
-		"data": res, // 指针类型也可以直接返回
-	})
+	return response.Success(c, "用户注册成功", res)
 }
 
 func (h *UserHandler) Login(c *echo.Context) error {
@@ -60,38 +44,44 @@ func (h *UserHandler) Login(c *echo.Context) error {
 	defer cancel()
 
 	req := new(dto.UserLoginReq)
-	if err := c.Bind(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]any{
-			"code": -1,
-			"msg":  "Invalid request body: " + err.Error(),
-		})
-	}
-
-	if err := c.Validate(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]any{
-			"code": -1,
-			"msg":  "Validation failed: " + err.Error(),
-		})
+	if err := h.bindAndValidate(c, req); err != nil {
+		return err
 	}
 
 	res, err := h.userSVC.Login(ctx, req)
 	if err != nil {
-		if strings.Contains(err.Error(), "invalid username or password") {
-			return c.JSON(http.StatusUnauthorized, map[string]any{
-				"code": -1,
-				"msg":  "用户名或密码错误",
-			})
-		}
-
-		return c.JSON(http.StatusInternalServerError, map[string]any{
-			"code": -1,
-			"msg":  "Failed to login: " + err.Error(),
-		})
+		return response.ErrorFrom(c, err)
 	}
 
-	return c.JSON(http.StatusOK, map[string]any{
-		"code": 0,
-		"msg":  "用户登录成功",
-		"data": res,
-	})
+	return response.Success(c, "用户登录成功", res)
+}
+
+func (h *UserHandler) GetProfile(c *echo.Context) error {
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 10*time.Second)
+	defer cancel()
+
+	username, ok := c.Get("username").(string)
+	if !ok || strings.TrimSpace(username) == "" {
+		return response.Error(c, apperror.ErrUnauthorized.WithMessage("未登录或 token 无效"))
+	}
+
+	req := &dto.UserProfileReq{Username: username}
+	res, err := h.userSVC.GetProfile(ctx, req)
+	if err != nil {
+		return response.ErrorFrom(c, err)
+	}
+
+	return response.Success(c, "获取用户信息成功", res)
+}
+
+func (h *UserHandler) bindAndValidate(c *echo.Context, req any) error {
+	if err := c.Bind(req); err != nil {
+		return response.Error(c, apperror.ErrInvalidParam.WithDetail(err.Error()))
+	}
+
+	if err := c.Validate(req); err != nil {
+		return response.Error(c, apperror.ErrInvalidParam.WithDetail(err.Error()))
+	}
+
+	return nil
 }

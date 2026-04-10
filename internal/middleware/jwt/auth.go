@@ -1,8 +1,9 @@
 package jwtauth
 
 import (
+	"finalai/internal/apperror"
+	"finalai/internal/response"
 	myjwt "finalai/pkg/jwt"
-	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v5"
@@ -18,27 +19,18 @@ func JWTAuth() echo.MiddlewareFunc {
 		return func(c *echo.Context) error {
 			authHeader := c.Request().Header.Get("Authorization")
 			if authHeader == "" {
-				return c.JSON(http.StatusUnauthorized, map[string]any{
-					"code": -1,
-					"msg":  "缺少 Authorization 头",
-				})
+				return response.Error(c, apperror.ErrTokenMissing)
 			}
 
 			parts := strings.SplitN(authHeader, " ", 2)
 			if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") || strings.TrimSpace(parts[1]) == "" {
-				return c.JSON(http.StatusUnauthorized, map[string]any{
-					"code": -1,
-					"msg":  "Authorization 格式错误，应为 Bearer <token>",
-				})
+				return response.Error(c, apperror.ErrTokenFormat)
 			}
 
 			tokenStr := strings.TrimSpace(parts[1])
 			claims, err := myjwt.ParseToken(tokenStr)
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, map[string]any{
-					"code": -1,
-					"msg":  "无效或过期的 token",
-				})
+				return response.Error(c, apperror.ErrTokenInvalid)
 			}
 
 			c.Set(ContextKeyUsername, claims.Username)

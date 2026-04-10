@@ -15,8 +15,8 @@ type MysqlConfig struct {
 	Database string `toml:"database"`
 	LogLevel string `toml:"log_level"`
 	Charset  string `toml:"charset"`
-	MaxIdle  int    `toml:"maxIdle"`
-	MaxOpen  int    `toml:"maxOpen"`
+	MaxIdle  int    `toml:"max_idle"`
+	MaxOpen  int    `toml:"max_open"`
 }
 
 type RedisConfig struct {
