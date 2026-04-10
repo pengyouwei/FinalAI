@@ -4,7 +4,7 @@ import (
 	"context"
 	"finalai/internal/apperror"
 	"finalai/internal/dto"
-	"finalai/internal/repository"
+	"finalai/internal/mvc/repository"
 	mycrypt "finalai/pkg/crypt"
 	myjwt "finalai/pkg/jwt"
 	"strings"

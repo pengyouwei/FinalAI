@@ -1,4 +1,4 @@
-package db
+package redis
 
 import (
 	"finalai/internal/config"
@@ -8,9 +8,9 @@ import (
 	"github.com/go-redis/redis"
 )
 
-var RedisDB *redis.Client
+var DB *redis.Client
 
-func InitRedis() {
+func Init() {
 	config := config.GetConfig().Redis
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     config.Host + ":" + strconv.Itoa(config.Port),
@@ -23,7 +23,7 @@ func InitRedis() {
 		panic("Failed to connect to [Redis]: " + err.Error())
 	}
 
-	RedisDB = rdb
+	DB = rdb
 
 	slog.Info("Successfully connected to [Redis]")
 }

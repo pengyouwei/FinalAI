@@ -1,11 +1,11 @@
-package handler
+package controller
 
 import (
 	"context"
 	"finalai/internal/apperror"
 	"finalai/internal/dto"
+	"finalai/internal/mvc/service"
 	"finalai/internal/response"
-	"finalai/internal/service"
 	"strings"
 	"time"
 

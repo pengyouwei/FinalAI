@@ -2,8 +2,8 @@ package router
 
 import (
 	"context"
-	"finalai/internal/handler"
 	jwtauth "finalai/internal/middleware/jwt"
+	"finalai/internal/mvc/controller"
 	"log/slog"
 	"net/http"
 
@@ -55,7 +55,7 @@ func RegisterRoutes(e *echo.Echo) {
 }
 
 func registerUserRoutes(g *echo.Group) {
-	userHandler := handler.NewUserHandler()
+	userHandler := controller.NewUserHandler()
 	g.POST("/register", userHandler.Register)
 	g.POST("/login", userHandler.Login)
 

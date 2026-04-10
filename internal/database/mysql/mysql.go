@@ -1,4 +1,4 @@
-package db
+package mysql
 
 import (
 	"finalai/internal/config"
@@ -13,9 +13,9 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var MysqlDB *gorm.DB
+var DB *gorm.DB
 
-func InitMysql() {
+func Init() {
 	config := config.GetConfig().Mysql
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
 		config.Username,
@@ -53,7 +53,7 @@ func InitMysql() {
 	sqlDB.SetMaxOpenConns(config.MaxOpen)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	MysqlDB = db
+	DB = db
 
 	slog.Info("Successfully connected to [Mysql]")
 }

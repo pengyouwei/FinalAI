@@ -2,12 +2,13 @@ package main
 
 import (
 	"finalai/internal/config"
-	db "finalai/internal/database"
+	"finalai/internal/database/mysql"
+	"finalai/internal/database/redis"
+	"finalai/internal/model"
 	myjwt "finalai/pkg/jwt"
 	mylogger "finalai/pkg/logger"
 	myvalidator "finalai/pkg/validator"
 
-	"finalai/internal/model"
 	"finalai/internal/mq/rabbitmq"
 	"finalai/internal/router"
 	"os"
@@ -24,13 +25,13 @@ func init() {
 
 func main() {
 	// 初始化数据库和消息队列连接
-	db.InitMysql()
-	db.InitRedis()
+	mysql.Init()
+	redis.Init()
 	rabbitmq.Init()
 	myjwt.Init()
 
 	// 迁移表
-	db.MysqlDB.AutoMigrate(&model.User{}, &model.Session{}, &model.Message{})
+	mysql.DB.AutoMigrate(&model.User{}, &model.Session{}, &model.Message{})
 
 	// 启动HTTP服务器
 	e := echo.New()

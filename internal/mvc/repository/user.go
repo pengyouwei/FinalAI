@@ -2,7 +2,8 @@ package repository
 
 import (
 	"errors"
-	db "finalai/internal/database"
+
+	"finalai/internal/database/mysql"
 	"finalai/internal/model"
 
 	"gorm.io/gorm"
@@ -19,12 +20,12 @@ func (dao *UserDAO) CreateUser(username, password string) error {
 		Username: username,
 		Password: password,
 	}
-	return db.MysqlDB.Create(user).Error
+	return mysql.DB.Create(user).Error
 }
 
 func (dao *UserDAO) GetUserByUsername(username string) (*model.User, error) {
 	var user model.User
-	err := db.MysqlDB.Where("username = ?", username).First(&user).Error
+	err := mysql.DB.Where("username = ?", username).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
