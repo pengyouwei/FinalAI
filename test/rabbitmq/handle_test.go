@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"finalai/internal/mq/rabbitmq"
+	"finalai/internal/common/rabbitmq"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )

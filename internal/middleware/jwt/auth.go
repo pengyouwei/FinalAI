@@ -1,8 +1,8 @@
 package jwtauth
 
 import (
-	"finalai/internal/apperror"
-	"finalai/internal/response"
+	"finalai/internal/common/apperror"
+	"finalai/internal/controller/response"
 	myjwt "finalai/pkg/jwt"
 	"strings"
 

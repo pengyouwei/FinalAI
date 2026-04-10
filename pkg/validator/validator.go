@@ -76,6 +76,9 @@ func formatError(field, tag, param string) string {
 	case "numeric":
 		return fmt.Sprintf("%s 必须为数字", field)
 
+	case "eqfield":
+		return fmt.Sprintf("%s 必须与 %s 相同", field, param)
+
 	default:
 		return fmt.Sprintf("%s 不合法(%s)", field, tag)
 	}

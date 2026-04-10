@@ -2,8 +2,8 @@ package router
 
 import (
 	"context"
+	"finalai/internal/controller"
 	jwtauth "finalai/internal/middleware/jwt"
-	"finalai/internal/mvc/controller"
 	"log/slog"
 	"net/http"
 

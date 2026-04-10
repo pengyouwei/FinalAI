@@ -1,16 +1,16 @@
 package main
 
 import (
+	"finalai/internal/common/mysql"
+	"finalai/internal/common/rabbitmq"
+	"finalai/internal/common/redis"
 	"finalai/internal/config"
-	"finalai/internal/database/mysql"
-	"finalai/internal/database/redis"
 	"finalai/internal/model"
+	"finalai/internal/router"
 	myjwt "finalai/pkg/jwt"
 	mylogger "finalai/pkg/logger"
 	myvalidator "finalai/pkg/validator"
 
-	"finalai/internal/mq/rabbitmq"
-	"finalai/internal/router"
 	"os"
 	"os/signal"
 	"strconv"
