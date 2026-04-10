@@ -4,6 +4,7 @@ import (
 	"context"
 	"finalai/internal/apperror"
 	"finalai/internal/dto"
+	"finalai/internal/model"
 	"finalai/internal/mvc/repository"
 	mycrypt "finalai/pkg/crypt"
 	myjwt "finalai/pkg/jwt"
@@ -11,18 +12,13 @@ import (
 )
 
 type UserSVC struct {
-	UserDAO *repository.UserDAO
 }
 
 func NewUserSVC() *UserSVC {
-	return &UserSVC{
-		UserDAO: repository.NewUserDAO(),
-	}
+	return &UserSVC{}
 }
 
 func (s *UserSVC) Register(ctx context.Context, req *dto.UserRegisterReq) (*dto.UserRegisterRes, error) {
-	_ = ctx
-
 	username := strings.TrimSpace(req.Username)
 	password, err := mycrypt.GetHashPassword(strings.TrimSpace(req.Password))
 	if err != nil {
@@ -30,7 +26,7 @@ func (s *UserSVC) Register(ctx context.Context, req *dto.UserRegisterReq) (*dto.
 	}
 
 	// 查看用户是否已存在
-	existingUser, err := s.UserDAO.GetUserByUsername(username)
+	existingUser, err := repository.GetUserByUsername(ctx, username)
 	if err != nil {
 		return nil, apperror.ErrInternal.WithDetail("查询用户失败")
 	}
@@ -38,7 +34,11 @@ func (s *UserSVC) Register(ctx context.Context, req *dto.UserRegisterReq) (*dto.
 		return nil, apperror.ErrUserAlreadyExists
 	}
 
-	err = s.UserDAO.CreateUser(username, password)
+	user := &model.User{
+		Username: username,
+		Password: password,
+	}
+	err = repository.CreateUser(ctx, user)
 	if err != nil {
 		return nil, apperror.ErrInternal.WithDetail("创建用户失败")
 	}
@@ -49,12 +49,10 @@ func (s *UserSVC) Register(ctx context.Context, req *dto.UserRegisterReq) (*dto.
 }
 
 func (s *UserSVC) Login(ctx context.Context, req *dto.UserLoginReq) (*dto.UserLoginRes, error) {
-	_ = ctx
-
 	username := strings.TrimSpace(req.Username)
 	password := strings.TrimSpace(req.Password)
 
-	user, err := s.UserDAO.GetUserByUsername(username)
+	user, err := repository.GetUserByUsername(ctx, username)
 	if err != nil {
 		return nil, apperror.ErrInternal.WithDetail("查询用户失败")
 	}
@@ -78,14 +76,12 @@ func (s *UserSVC) Login(ctx context.Context, req *dto.UserLoginReq) (*dto.UserLo
 }
 
 func (s *UserSVC) GetProfile(ctx context.Context, req *dto.UserProfileReq) (*dto.UserProfileRes, error) {
-	_ = ctx
-
 	username := strings.TrimSpace(req.Username)
 	if username == "" {
 		return nil, apperror.ErrInvalidParam.WithDetail("username 不能为空")
 	}
 
-	user, err := s.UserDAO.GetUserByUsername(username)
+	user, err := repository.GetUserByUsername(ctx, username)
 	if err != nil {
 		return nil, apperror.ErrInternal.WithDetail("查询用户失败")
 	}

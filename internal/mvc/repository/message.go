@@ -1,0 +1,11 @@
+package repository
+
+import (
+	"context"
+	"finalai/internal/database/mysql"
+	"finalai/internal/model"
+)
+
+func SaveMessage(ctx context.Context, msg *model.Message) error {
+	return mysql.DB.WithContext(ctx).Create(msg).Error
+}

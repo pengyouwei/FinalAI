@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"errors"
 
 	"finalai/internal/database/mysql"
@@ -9,23 +10,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserDAO struct{}
-
-func NewUserDAO() *UserDAO {
-	return &UserDAO{}
+func CreateUser(ctx context.Context, user *model.User) error {
+	return mysql.DB.WithContext(ctx).Create(user).Error
 }
 
-func (dao *UserDAO) CreateUser(username, password string) error {
-	user := &model.User{
-		Username: username,
-		Password: password,
-	}
-	return mysql.DB.Create(user).Error
-}
-
-func (dao *UserDAO) GetUserByUsername(username string) (*model.User, error) {
+func GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
 	var user model.User
-	err := mysql.DB.Where("username = ?", username).First(&user).Error
+	err := mysql.DB.WithContext(ctx).Where("username = ?", username).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

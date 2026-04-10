@@ -28,6 +28,7 @@ func main() {
 	mysql.Init()
 	redis.Init()
 	rabbitmq.Init()
+	defer rabbitmq.CloseConn()
 	myjwt.Init()
 
 	// 迁移表
