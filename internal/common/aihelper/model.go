@@ -11,6 +11,7 @@ import (
 	"github.com/cloudwego/eino-ext/components/model/openai"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/schema"
+	"github.com/joho/godotenv"
 )
 
 type StreamCallback func(msg string)
@@ -28,6 +29,10 @@ type OpenAIModel struct {
 }
 
 func NewOpenAIModel(ctx context.Context) (*OpenAIModel, error) {
+	if err := godotenv.Load(); err != nil {
+		return nil, fmt.Errorf("load .env failed: %v", err)
+	}
+
 	key := os.Getenv("OPENAI_API_KEY")
 	modelName := os.Getenv("OPENAI_MODEL_NAME")
 	baseURL := os.Getenv("OPENAI_BASE_URL")

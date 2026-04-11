@@ -25,7 +25,7 @@ func HandleMessage(ctx context.Context, delivery *amqp.Delivery) error {
 	if err := json.Unmarshal(delivery.Body, msg); err != nil {
 		return err
 	}
-	return repository.SaveMessage(ctx, &model.Message{
+	return repository.CreateMessage(ctx, &model.Message{
 		SessionID: msg.SessionID,
 		Username:  msg.Username,
 		Content:   msg.Content,

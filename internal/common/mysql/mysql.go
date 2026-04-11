@@ -57,3 +57,15 @@ func Init() {
 
 	slog.Info("Successfully connected to [Mysql]")
 }
+
+func Close() {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		slog.Error("Failed to get SQL DB instance: " + err.Error())
+		return
+	}
+	if err := sqlDB.Close(); err != nil {
+		slog.Error("Failed to close SQL DB connection: " + err.Error())
+	}
+	slog.Info("Successfully closed [Mysql] connection")
+}

@@ -1,0 +1,27 @@
+:root {
+  --bg: #f6f7fb;
+  --panel: #ffffff;
+  --ink: #1f2230;
+  --muted: #5a6178;
+  --line: #e8eaf2;
+  --brand: #0f766e;
+  --brand-2: #14b8a6;
+  --danger: #be123c;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  background: radial-gradient(circle at 0% 0%, #d9f7f0 0%, #f6f7fb 45%),
+    linear-gradient(120deg, #f6f7fb, #eef1f8);
+  font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}

@@ -27,3 +27,14 @@ func Init() {
 
 	slog.Info("Successfully connected to [Redis]")
 }
+
+func Close() {
+	if DB != nil {
+		err := DB.Close()
+		if err != nil {
+			slog.Error("Failed to close [Redis] connection: " + err.Error())
+			return
+		}
+	}
+	slog.Info("Successfully closed [Redis] connection")
+}

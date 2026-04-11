@@ -79,7 +79,10 @@ const (
 	CodeTokenFormat       = 10007
 	CodeTokenInvalid      = 10008
 
-	CodeInternal = 20000
+	CodeInternal        = 20000
+	CodeServerBusy      = 20001
+	CodeAIModelFail     = 20002
+	CodeSessionNotFound = 20003
 )
 
 var (
@@ -92,4 +95,7 @@ var (
 	ErrTokenFormat       = &Error{Code: CodeTokenFormat, Message: "Authorization 格式错误，应为 Bearer <token>", HTTPStatus: http.StatusUnauthorized}
 	ErrTokenInvalid      = &Error{Code: CodeTokenInvalid, Message: "无效或过期的 token", HTTPStatus: http.StatusUnauthorized}
 	ErrInternal          = &Error{Code: CodeInternal, Message: "服务器内部错误", HTTPStatus: http.StatusInternalServerError}
+	ErrServerBusy        = &Error{Code: CodeServerBusy, Message: "服务器繁忙，请稍后重试", HTTPStatus: http.StatusServiceUnavailable}
+	ErrAIModelFail       = &Error{Code: CodeAIModelFail, Message: "AI 模型调用失败", HTTPStatus: http.StatusBadGateway}
+	ErrSessionNotFound   = &Error{Code: CodeSessionNotFound, Message: "会话不存在", HTTPStatus: http.StatusNotFound}
 )

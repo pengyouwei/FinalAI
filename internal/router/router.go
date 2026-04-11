@@ -38,8 +38,8 @@ func RegisterRoutes(e *echo.Echo) {
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Accept"},
+		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
 
 	// 测试路由
@@ -64,9 +64,18 @@ func registerUserRoutes(g *echo.Group) {
 }
 
 func registerChatRoutes(g *echo.Group) {
+	sessionHandler := controller.NewSessionHandler()
 	g.Use(jwtauth.JWTAuth())
+	g.GET("/sessions", sessionHandler.GetUserSessionsByUserName)
+	g.POST("/create", sessionHandler.CreateSessionAndSendMessage)
+	g.POST("/create/stream", sessionHandler.CreateStreamSessionAndSendMessage)
+	g.POST("/send", sessionHandler.ChatSend)
+	g.POST("/send/stream", sessionHandler.ChatStreamSend)
+	g.POST("/history", sessionHandler.ChatHistory)
 }
 
 func registerImageRoutes(g *echo.Group) {
+	imageHandler := controller.NewImageHandler()
 	g.Use(jwtauth.JWTAuth())
+	g.POST("/recognize", imageHandler.RecognizeImage)
 }
