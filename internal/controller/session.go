@@ -188,7 +188,7 @@ func (h *SessionHandler) injectUsernameFromContext(c *echo.Context, req any) {
 	}
 
 	rv := reflect.ValueOf(req)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+	if rv.Kind() != reflect.Pointer || rv.IsNil() {
 		return
 	}
 
