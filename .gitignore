@@ -1,2 +1,10 @@
 *.env
 *.toml
+*.log
+
+# Runtime/upload artifacts
+uploads/
+
+# OS/editor temporary files
+.DS_Store
+Thumbs.db
