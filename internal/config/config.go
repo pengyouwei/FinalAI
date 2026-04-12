@@ -34,11 +34,31 @@ type RabbitMQConfig struct {
 	Vhost    string `toml:"vhost"`
 }
 
+type RagModelConfig struct {
+	RagBaseUrl        string `toml:"rag_base_url"`
+	RagChatModelName  string `toml:"rag_chat_model_name"`
+	RagEmbeddingModel string `toml:"rag_embedding_model"`
+	RagDimension      int    `toml:"rag_dimension"`
+}
+
 type Config struct {
-	Server   ServerConfig   `toml:"server"`
-	Mysql    MysqlConfig    `toml:"mysql"`
-	Redis    RedisConfig    `toml:"redis"`
-	RabbitMQ RabbitMQConfig `toml:"rabbitmq"`
+	Server         ServerConfig   `toml:"server"`
+	Mysql          MysqlConfig    `toml:"mysql"`
+	Redis          RedisConfig    `toml:"redis"`
+	RabbitMQ       RabbitMQConfig `toml:"rabbitmq"`
+	RagModelConfig RagModelConfig `toml:"rag_model"`
+}
+
+type RedisKeyConfig struct {
+	CaptchaPrefix   string
+	IndexName       string
+	IndexNamePrefix string
+}
+
+var DefaultRedisKeyConfig = RedisKeyConfig{
+	CaptchaPrefix:   "captcha:%s",
+	IndexName:       "rag_docs:%s:idx",
+	IndexNamePrefix: "rag_docs:%s:",
 }
 
 var config *Config

@@ -88,10 +88,28 @@ export const api = {
     })
   },
 
+  deleteSession(payload) {
+    return request('/chat/delete', {
+      method: 'POST',
+      headers: buildHeaders({ 'Content-Type': 'application/json' }, true),
+      body: JSON.stringify(payload),
+    })
+  },
+
   recognizeImage(file) {
     const form = new FormData()
     form.append('image', file)
     return request('/image/recognize', {
+      method: 'POST',
+      headers: buildHeaders({}, true),
+      body: form,
+    })
+  },
+
+  uploadRagFile(file) {
+    const form = new FormData()
+    form.append('file', file)
+    return request('/file/upload', {
       method: 'POST',
       headers: buildHeaders({}, true),
       body: form,

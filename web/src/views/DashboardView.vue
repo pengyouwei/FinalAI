@@ -7,6 +7,12 @@ const router = useRouter()
 const profile = ref(null)
 const error = ref('')
 
+const modelOptions = [
+  { value: '1', label: 'OpenAI' },
+  { value: '2', label: 'Ollama' },
+  { value: '3', label: 'RAG 知识库' },
+]
+
 const sessions = ref([])
 const currentSessionId = ref('')
 const modelType = ref('1')
@@ -15,8 +21,12 @@ const messages = ref([])
 
 const imageFile = ref(null)
 const imageResult = ref('')
+const ragFile = ref(null)
+const ragUploadResult = ref(null)
 const streamBusy = ref(false)
 const submitBusy = ref(false)
+const uploadBusy = ref(false)
+const deletingSessionId = ref('')
 const createMode = ref(true)
 const streamMode = ref(true)
 const messageListRef = ref(null)
@@ -236,10 +246,63 @@ async function doImageRecognize() {
   }
 }
 
+function onRagFileChange(e) {
+  ragFile.value = e.target.files?.[0] || null
+}
+
+async function doRagUpload() {
+  if (!ragFile.value) {
+    error.value = '请先选择要上传的 RAG 文件'
+    return
+  }
+
+  error.value = ''
+  uploadBusy.value = true
+  ragUploadResult.value = null
+  try {
+    const data = await api.uploadRagFile(ragFile.value)
+    ragUploadResult.value = data
+    modelType.value = '3'
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    uploadBusy.value = false
+  }
+}
+
 function chooseSession(id) {
   currentSessionId.value = id
   createMode.value = false
   loadHistory()
+}
+
+async function deleteSession(id) {
+  if (!id || deletingSessionId.value) {
+    return
+  }
+
+  const ok = window.confirm('确认删除该会话及其历史消息吗？该操作不可恢复。')
+  if (!ok) {
+    return
+  }
+
+  error.value = ''
+  deletingSessionId.value = id
+  try {
+    await api.deleteSession({ sessionId: id })
+
+    if (currentSessionId.value === id) {
+      currentSessionId.value = ''
+      messages.value = []
+      createMode.value = true
+    }
+
+    await loadSessions()
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    deletingSessionId.value = ''
+  }
 }
 
 watch(messages, async () => {
@@ -289,23 +352,21 @@ onMounted(async () => {
             :class="{ active: s.session_id === currentSessionId && !createMode }"
             @click="chooseSession(s.session_id)"
           >
-            <p>{{ s.title }}</p>
+            <div class="session-item-head">
+              <p>{{ s.title }}</p>
+              <button
+                class="session-delete-btn"
+                :disabled="deletingSessionId === s.session_id"
+                @click.stop="deleteSession(s.session_id)"
+                title="删除该会话"
+              >
+                {{ deletingSessionId === s.session_id ? '...' : '删' }}
+              </button>
+            </div>
             <small>{{ s.session_id.slice(0, 10) }}...</small>
           </li>
         </ul>
       </div>
-
-      <section class="vision-card">
-        <h4>图片识别</h4>
-        <input type="file" accept="image/*" @change="(e) => (imageFile = e.target.files?.[0] || null)" />
-        <button class="mini-btn fill" :disabled="submitBusy" @click="doImageRecognize">识别</button>
-        <p v-if="imageResult" class="vision-result">结果: {{ imageResult }}</p>
-      </section>
-
-      <footer class="sidebar-footer">
-        <span v-if="profile" class="username">@{{ profile.username }}</span>
-        <button class="mini-btn danger" @click="logout">退出</button>
-      </footer>
     </aside>
 
     <main class="gpt-main">
@@ -324,8 +385,7 @@ onMounted(async () => {
           <button :class="['pill', { active: streamMode }]" @click="streamMode = true">流式</button>
           <button :class="['pill', { active: !streamMode }]" @click="streamMode = false">普通</button>
           <select v-model="modelType" class="model-select">
-            <option value="1">OpenAI</option>
-            <option value="2">Ollama</option>
+            <option v-for="item in modelOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
           </select>
         </div>
       </header>
@@ -368,5 +428,33 @@ onMounted(async () => {
         <p class="error" v-if="error">{{ error }}</p>
       </section>
     </main>
+
+    <aside class="gpt-toolside">
+      <div class="toolside-scroll">
+        <section class="vision-card">
+          <h4>图片识别</h4>
+          <input type="file" accept="image/*" @change="(e) => (imageFile = e.target.files?.[0] || null)" />
+          <button class="mini-btn fill" :disabled="submitBusy" @click="doImageRecognize">识别</button>
+          <p v-if="imageResult" class="vision-result">结果: {{ imageResult }}</p>
+        </section>
+
+        <section class="vision-card">
+          <h4>RAG 文件上传</h4>
+          <p class="tool-hint">上传成功后将自动切换到 RAG 知识库模型。</p>
+          <input type="file" accept=".txt,.md,.markdown,text/plain,text/markdown" @change="onRagFileChange" />
+          <button class="mini-btn fill full" :disabled="uploadBusy || submitBusy || streamBusy" @click="doRagUpload">
+            {{ uploadBusy ? '上传中...' : '上传' }}
+          </button>
+          <p v-if="ragUploadResult?.file_name" class="vision-result">文件: {{ ragUploadResult.file_name }}</p>
+          <p v-if="ragUploadResult?.file_path" class="vision-result">路径: {{ ragUploadResult.file_path }}</p>
+          <p v-if="ragUploadResult" class="vision-success">知识库已就绪，可直接提问。</p>
+        </section>
+      </div>
+
+      <footer class="sidebar-footer toolside-footer">
+        <span v-if="profile" class="username">@{{ profile.username }}</span>
+        <button class="mini-btn danger" @click="logout">退出</button>
+      </footer>
+    </aside>
   </section>
 </template>

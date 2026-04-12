@@ -46,6 +46,15 @@ func (f *AIModelFactory) registerCreators() {
 		}
 		return NewOllamaModel(ctx, baseURL, modelName)
 	}
+
+	// RAG + Chat
+	f.creators["3"] = func(ctx context.Context, config map[string]interface{}) (AIModel, error) {
+		username, ok := config["username"].(string)
+		if !ok || username == "" {
+			return nil, fmt.Errorf("RAG model requires username")
+		}
+		return NewAliRAGModel(ctx, username)
+	}
 }
 
 // CreateAIModel 根据类型创建 AI 模型

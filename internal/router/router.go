@@ -52,6 +52,7 @@ func RegisterRoutes(e *echo.Echo) {
 	registerUserRoutes(v1.Group("/user"))
 	registerChatRoutes(v1.Group("/chat"))
 	registerImageRoutes(v1.Group("/image"))
+	registerFileRoutes(v1.Group("/file"))
 }
 
 func registerUserRoutes(g *echo.Group) {
@@ -72,10 +73,17 @@ func registerChatRoutes(g *echo.Group) {
 	g.POST("/send", sessionHandler.ChatSend)
 	g.POST("/send/stream", sessionHandler.ChatStreamSend)
 	g.POST("/history", sessionHandler.ChatHistory)
+	g.POST("/delete", sessionHandler.DeleteSessionHistory)
 }
 
 func registerImageRoutes(g *echo.Group) {
 	imageHandler := controller.NewImageHandler()
 	g.Use(jwtauth.JWTAuth())
 	g.POST("/recognize", imageHandler.RecognizeImage)
+}
+
+func registerFileRoutes(g *echo.Group) {
+	fileHandler := controller.NewFileHandler()
+	g.Use(jwtauth.JWTAuth())
+	g.POST("/upload", fileHandler.UploadRagFile)
 }

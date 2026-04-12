@@ -216,3 +216,21 @@ func (s *SessionSVC) ChatStreamSend(req *dto.ChatStreamSendReq) (*dto.StreamDone
 		Writer:       req.Writer,
 	})
 }
+
+func (s *SessionSVC) DeleteSessionHistory(req *dto.DeleteSessionReq) error {
+	if req == nil || strings.TrimSpace(req.SessionID) == "" {
+		return apperror.ErrInvalidParam.WithDetail("sessionId 不能为空")
+	}
+
+	deleted, err := repository.DeleteSessionHistory(req.Username, req.SessionID)
+	if err != nil {
+		slog.Error("DeleteSessionHistory DeleteSessionHistory error", "error", err)
+		return apperror.ErrServerBusy.WithCause(err)
+	}
+	if !deleted {
+		return apperror.ErrSessionNotFound
+	}
+
+	aihelper.GetGlobalManager().RemoveAIHelper(req.Username, req.SessionID)
+	return nil
+}

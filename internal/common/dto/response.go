@@ -50,3 +50,8 @@ type ChatHistoryRes struct {
 type ImageRecognizeRes struct {
 	ClassName string `json:"class_name"`
 }
+
+type UploadRagFileRes struct {
+	FilePath string `json:"file_path"`
+	FileName string `json:"file_name"`
+}

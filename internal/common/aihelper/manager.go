@@ -35,8 +35,33 @@ func (m *AIHelperManager) GetOrCreateAIHelper(userName string, sessionID string,
 	// 检查会话是否已存在
 	helper, exists := userHelpers[sessionID]
 	if exists {
-		return helper, nil
+		if helper.GetModelType() == modelType {
+			return helper, nil
+		}
+
+		if config == nil {
+			config = make(map[string]any)
+		}
+		config["username"] = userName
+
+		factory := GetGlobalFactory()
+		newHelper, err := factory.CreateAIHelper(ctx, modelType, sessionID, config)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, msg := range helper.GetMessages() {
+			newHelper.AddMessage(msg.Content, msg.Username, msg.IsUser, false)
+		}
+
+		userHelpers[sessionID] = newHelper
+		return newHelper, nil
 	}
+
+	if config == nil {
+		config = make(map[string]any)
+	}
+	config["username"] = userName
 
 	// 创建新的AIHelper
 	factory := GetGlobalFactory()

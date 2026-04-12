@@ -2,8 +2,11 @@ package aihelper
 
 import (
 	"context"
+	"finalai/internal/common/rag"
+	"finalai/internal/config"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strings"
 
@@ -83,7 +86,7 @@ func (o *OpenAIModel) StreamResponse(ctx context.Context, messages []*schema.Mes
 	return fullResp.String(), nil //返回完整内容，方便后续存储
 }
 
-func (o *OpenAIModel) GetModelType() string { return "openai" }
+func (o *OpenAIModel) GetModelType() string { return "1" }
 
 // =================== Ollama 实现 ===================
 
@@ -134,4 +137,191 @@ func (o *OllamaModel) StreamResponse(ctx context.Context, messages []*schema.Mes
 	return fullResp.String(), nil //返回完整内容，方便后续存储
 }
 
-func (o *OllamaModel) GetModelType() string { return "ollama" }
+func (o *OllamaModel) GetModelType() string { return "2" }
+
+// =================== RAG 实现 ===================
+type AliRAGModel struct {
+	llm      model.ToolCallingChatModel
+	username string // 用于获取用户的文档
+}
+
+func NewAliRAGModel(ctx context.Context, username string) (*AliRAGModel, error) {
+	key := os.Getenv("OPENAI_API_KEY")
+	conf := config.GetConfig()
+	modelName := conf.RagModelConfig.RagChatModelName
+	baseURL := conf.RagModelConfig.RagBaseUrl
+
+	llm, err := openai.NewChatModel(ctx, &openai.ChatModelConfig{
+		BaseURL: baseURL,
+		Model:   modelName,
+		APIKey:  key,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create ali rag model failed: %v", err)
+	}
+	return &AliRAGModel{
+		llm:      llm,
+		username: username,
+	}, nil
+}
+
+func (o *AliRAGModel) GenerateResponse(ctx context.Context, messages []*schema.Message) (*schema.Message, error) {
+	// 1. 创建 RAG 查询器
+	ragQuery, err := rag.NewRAGQuery(ctx, o.username)
+	if err != nil {
+		log.Printf("Failed to create RAG query (user may not have uploaded file): %v", err)
+		// 如果用户没有上传文件，直接使用原始问题
+		resp, err := o.llm.Generate(ctx, messages)
+		if err != nil {
+			return nil, fmt.Errorf("ali rag generate failed: %v", err)
+		}
+		return resp, nil
+	}
+
+	// 2. 获取用户最后一条消息作为查询
+	if len(messages) == 0 {
+		return nil, fmt.Errorf("no messages provided")
+	}
+	lastMessage := messages[len(messages)-1]
+	query := lastMessage.Content
+
+	// 3. 检索相关文档
+	docs, err := ragQuery.RetrieveDocuments(ctx, query)
+	if err != nil {
+		log.Printf("Failed to retrieve documents: %v", err)
+		// 检索失败，使用原始问题
+		resp, err := o.llm.Generate(ctx, messages)
+		if err != nil {
+			return nil, fmt.Errorf("ali rag generate failed: %v", err)
+		}
+		return resp, nil
+	}
+
+	if len(docs) == 0 {
+		fallbackDoc, fallbackErr := rag.LoadLatestUploadedDocument(o.username)
+		if fallbackErr == nil && fallbackDoc != nil {
+			docs = []*schema.Document{fallbackDoc}
+			log.Printf("RAG retrieve empty, fallback to latest uploaded doc for user=%s", o.username)
+		}
+	}
+
+	log.Printf("RAG retrieved docs count=%d for user=%s", len(docs), o.username)
+
+	// 4. 构建包含检索结果的提示词
+	ragPrompt := rag.BuildRAGPrompt(query, docs)
+
+	// 5. 替换最后一条消息为 RAG 提示词
+	ragMessages := make([]*schema.Message, len(messages))
+	copy(ragMessages, messages)
+	ragMessages[len(ragMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: ragPrompt,
+	}
+
+	// 6. 调用 LLM 生成回答
+	resp, err := o.llm.Generate(ctx, ragMessages)
+	if err != nil {
+		return nil, fmt.Errorf("ali rag generate failed: %v", err)
+	}
+	return resp, nil
+}
+
+func (o *AliRAGModel) StreamResponse(ctx context.Context, messages []*schema.Message, cb StreamCallback) (string, error) {
+	// 1. 创建 RAG 查询器
+	ragQuery, err := rag.NewRAGQuery(ctx, o.username)
+	if err != nil {
+		log.Printf("Failed to create RAG query (user may not have uploaded file): %v", err)
+		// 如果用户没有上传文件，直接使用原始问题
+		return o.streamWithoutRAG(ctx, messages, cb)
+	}
+
+	// 2. 获取用户最后一条消息作为查询
+	if len(messages) == 0 {
+		return "", fmt.Errorf("no messages provided")
+	}
+	lastMessage := messages[len(messages)-1]
+	query := lastMessage.Content
+
+	// 3. 检索相关文档
+	docs, err := ragQuery.RetrieveDocuments(ctx, query)
+	if err != nil {
+		log.Printf("Failed to retrieve documents: %v", err)
+		// 检索失败，使用原始问题
+		return o.streamWithoutRAG(ctx, messages, cb)
+	}
+
+	if len(docs) == 0 {
+		fallbackDoc, fallbackErr := rag.LoadLatestUploadedDocument(o.username)
+		if fallbackErr == nil && fallbackDoc != nil {
+			docs = []*schema.Document{fallbackDoc}
+			log.Printf("RAG retrieve empty, fallback to latest uploaded doc for user=%s", o.username)
+		}
+	}
+
+	log.Printf("RAG retrieved docs count=%d for user=%s", len(docs), o.username)
+
+	// 4. 构建包含检索结果的提示词
+	ragPrompt := rag.BuildRAGPrompt(query, docs)
+
+	// 5. 替换最后一条消息为 RAG 提示词
+	ragMessages := make([]*schema.Message, len(messages))
+	copy(ragMessages, messages)
+	ragMessages[len(ragMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: ragPrompt,
+	}
+
+	// 6. 流式调用 LLM
+	stream, err := o.llm.Stream(ctx, ragMessages)
+	if err != nil {
+		return "", fmt.Errorf("ali rag stream failed: %v", err)
+	}
+	defer stream.Close()
+
+	var fullResp strings.Builder
+
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", fmt.Errorf("ali rag stream recv failed: %v", err)
+		}
+		if len(msg.Content) > 0 {
+			fullResp.WriteString(msg.Content)
+			cb(msg.Content)
+		}
+	}
+
+	return fullResp.String(), nil
+}
+
+// streamWithoutRAG 当没有 RAG 文档时的流式响应
+func (o *AliRAGModel) streamWithoutRAG(ctx context.Context, messages []*schema.Message, cb StreamCallback) (string, error) {
+	stream, err := o.llm.Stream(ctx, messages)
+	if err != nil {
+		return "", fmt.Errorf("ali rag stream failed: %v", err)
+	}
+	defer stream.Close()
+
+	var fullResp strings.Builder
+
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", fmt.Errorf("ali rag stream recv failed: %v", err)
+		}
+		if len(msg.Content) > 0 {
+			fullResp.WriteString(msg.Content)
+			cb(msg.Content)
+		}
+	}
+
+	return fullResp.String(), nil
+}
+
+func (o *AliRAGModel) GetModelType() string { return "3" }

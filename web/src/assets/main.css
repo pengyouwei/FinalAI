@@ -91,7 +91,7 @@ button:disabled {
 .gpt-layout {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 272px 1fr;
+  grid-template-columns: minmax(240px, 272px) minmax(0, 1fr) minmax(260px, 320px);
   background: var(--bg-main);
 }
 
@@ -142,6 +142,38 @@ button:disabled {
   font-weight: 500;
 }
 
+.session-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.session-item-head p {
+  flex: 1;
+}
+
+.session-delete-btn {
+  border: 1px solid var(--line-sidebar);
+  background: transparent;
+  color: var(--text-sidebar-muted);
+  border-radius: 6px;
+  font-size: 11px;
+  padding: 2px 6px;
+  line-height: 1.2;
+  min-width: 26px;
+}
+
+.session-delete-btn:hover {
+  color: #fecaca;
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.session-delete-btn:disabled {
+  opacity: 0.6;
+}
+
 .session-list small {
   display: block;
   color: var(--text-sidebar-muted);
@@ -157,10 +189,31 @@ button:disabled {
   padding: 12px;
   display: grid;
   gap: 16px;
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto 1fr;
   border-right: 1px solid var(--line);
   min-width: 0;
   overflow: hidden;
+}
+
+.gpt-toolside {
+  background: var(--bg-sidebar);
+  color: var(--text-sidebar);
+  border-left: 1px solid var(--line);
+  padding: 12px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.toolside-scroll {
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  padding-right: 4px;
 }
 
 .sidebar-header {
@@ -221,6 +274,10 @@ button:disabled {
   opacity: 0.9;
 }
 
+.mini-btn.full {
+  width: 100%;
+}
+
 .mini-btn.danger {
   background: var(--bg-danger);
   border-color: var(--line-danger);
@@ -237,6 +294,7 @@ button:disabled {
   padding: 10px;
   display: grid;
   gap: 8px;
+  align-content: start;
 }
 
 .vision-card h4 {
@@ -250,6 +308,8 @@ button:disabled {
   background: var(--bg-sidebar-element);
   color: var(--text-sidebar);
   font-size: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
 .vision-result {
@@ -257,14 +317,32 @@ button:disabled {
   font-size: 12px;
 }
 
+.tool-hint {
+  color: var(--text-sidebar-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.vision-success {
+  color: #86efac;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .sidebar-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
   color: var(--text-sidebar-muted);
   font-size: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--line-sidebar);
+}
+
+.toolside-footer {
+  margin-top: 4px;
 }
 
 .sidebar-footer .username {
@@ -276,6 +354,7 @@ button:disabled {
   display: grid;
   grid-template-rows: auto 1fr auto;
   max-height: 100vh;
+  min-width: 0;
 }
 
 .gpt-header {
@@ -315,6 +394,7 @@ button:disabled {
   display: flex;
   gap: 6px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .pill {
@@ -515,10 +595,22 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .gpt-sidebar {
-    grid-template-rows: auto auto auto;
+  .gpt-sidebar,
+  .gpt-toolside {
+    grid-template-rows: auto;
+    border-left: 0;
     border-right: 0;
     border-bottom: 1px solid var(--line);
+  }
+
+  .gpt-toolside {
+    order: 3;
+    border-bottom: 0;
+  }
+
+  .gpt-main {
+    order: 2;
+    max-height: none;
   }
 
   .session-list-wrap {

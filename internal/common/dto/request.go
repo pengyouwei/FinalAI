@@ -63,6 +63,11 @@ type ChatHistoryReq struct {
 	SessionID string `json:"sessionId" validate:"required"`
 }
 
+type DeleteSessionReq struct {
+	Username  string `json:"-" validate:"required,min=3,max=20"`
+	SessionID string `json:"sessionId" validate:"required"`
+}
+
 type ChatStreamSendReq struct {
 	Username     string              `json:"-" validate:"required,min=3,max=20"`
 	SessionID    string              `json:"sessionId" validate:"required"`
@@ -73,4 +78,9 @@ type ChatStreamSendReq struct {
 
 type ImageRecognizeReq struct {
 	File *multipart.FileHeader `json:"-"`
+}
+
+type UploadRagFileReq struct {
+	Username string                `json:"-" validate:"required,min=3,max=20"`
+	File     *multipart.FileHeader `json:"-" validate:"required"`
 }

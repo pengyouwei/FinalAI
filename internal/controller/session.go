@@ -170,6 +170,25 @@ func (h *SessionHandler) ChatHistory(c *echo.Context) error {
 	return response.Success(c, "获取聊天历史成功", res)
 }
 
+func (h *SessionHandler) DeleteSessionHistory(c *echo.Context) error {
+	username, err := h.usernameFromContext(c)
+	if err != nil {
+		return response.Error(c, err)
+	}
+
+	req := new(dto.DeleteSessionReq)
+	if err := h.bindAndValidate(c, req); err != nil {
+		return err
+	}
+	req.Username = username
+
+	if appErr := h.sessionSVC.DeleteSessionHistory(req); appErr != nil {
+		return response.ErrorFrom(c, appErr)
+	}
+
+	return response.Success(c, "删除会话成功", nil)
+}
+
 func (h *SessionHandler) bindAndValidate(c *echo.Context, req any) error {
 	if err := c.Bind(req); err != nil {
 		return response.Error(c, apperror.ErrInvalidParam.WithDetail(err.Error()))
