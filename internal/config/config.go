@@ -27,11 +27,12 @@ type RedisConfig struct {
 }
 
 type RabbitMQConfig struct {
-	Host     string `toml:"host"`
-	Port     int    `toml:"port"`
-	Username string `toml:"username"`
-	Password string `toml:"password"`
-	Vhost    string `toml:"vhost"`
+	Host          string `toml:"host"`
+	Port          int    `toml:"port"`
+	Username      string `toml:"username"`
+	Password      string `toml:"password"`
+	Vhost         string `toml:"vhost"`
+	ConsumerCount int    `toml:"consumer_count"`
 }
 
 type RagModelConfig struct {

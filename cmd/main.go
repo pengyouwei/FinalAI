@@ -41,13 +41,27 @@ func main() {
 	rabbitmq.Init()
 	defer rabbitmq.CloseConn()
 
-	consumer := rabbitmq.StartConsumer(
-		rabbitmq.MessageQueueName,
-		func(msg *amqp.Delivery) error {
-			return rabbitmq.HandleMessage(context.Background(), msg)
-		},
-	)
-	defer consumer.Close()
+	consumerCount := config.GetConfig().RabbitMQ.ConsumerCount
+	if consumerCount <= 0 {
+		consumerCount = 1
+	}
+
+	consumers := make([]*rabbitmq.Consumer, 0, consumerCount)
+	for i := 0; i < consumerCount; i++ {
+		consumer := rabbitmq.StartConsumer(
+			rabbitmq.MessageQueueName,
+			func(msg *amqp.Delivery) error {
+				return rabbitmq.HandleMessage(context.Background(), msg)
+			},
+		)
+		consumers = append(consumers, consumer)
+	}
+	defer func() {
+		for i := range consumers {
+			consumers[i].Close()
+		}
+	}()
+	slog.Info("RabbitMQ consumers started", "count", consumerCount)
 
 	// 迁移表
 	mysql.DB.AutoMigrate(&model.User{}, &model.Session{}, &model.Message{})
