@@ -12,7 +12,6 @@ import (
 )
 
 var DB *redis.Client
-var Rdb *redis.Client
 
 func Init() {
 	config := config.GetConfig().Redis
@@ -29,7 +28,6 @@ func Init() {
 	}
 
 	DB = rdb
-	Rdb = rdb
 
 	slog.Info("Successfully connected to [Redis]")
 }

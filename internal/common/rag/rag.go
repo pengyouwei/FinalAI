@@ -71,7 +71,7 @@ func NewRAGIndexer(filename, embeddingModel string) (*RAGIndexer, error) {
 	}
 
 	// 获取 Redis 客户端，用于后续数据写入
-	rdb := redisPkg.Rdb
+	rdb := redisPkg.DB
 
 	// ===============================
 	// 3. 配置索引器（定义：文档如何被存进 Redis）
@@ -193,7 +193,7 @@ func NewRAGQuery(ctx context.Context, username string) (*RAGQuery, error) {
 	}
 
 	// 创建 retriever
-	rdb := redisPkg.Rdb
+	rdb := redisPkg.DB
 	indexName := redisPkg.GenerateIndexName(filename)
 
 	retrieverConfig := &redisRetriever.RetrieverConfig{
